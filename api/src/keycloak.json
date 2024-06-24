@@ -1,0 +1,13 @@
+{
+  "realm": "catnasta",
+  "auth-server-url": "http://localhost:8080",
+  "ssl-required": "external",
+  "resource": "catnasta-api",
+  "credentials": {
+    "secret": "SsVlgvGOyJOmsgceGSMpF5x0gP8MJzW3"
+  },
+  "confidential-port": 0,
+  "use-resource-role-mappings": true,
+  "policy-enforcer": {},
+  "bearer-only": true
+}
