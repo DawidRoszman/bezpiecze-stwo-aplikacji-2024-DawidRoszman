@@ -1,5 +1,6 @@
+"use client"
 import axios from "axios";
-import { Suspense } from "react";
+import { useEffect, useState } from "react";
 import Loading from "./components/Loading";
 import MqttChat from "./components/MqttChat";
 import GameMenu from "./components/GameMenu";
@@ -7,11 +8,22 @@ import { api } from "./lib/api";
 import Auth from "./components/Auth";
 import Link from "next/link";
 
-export default async function Home() {
-  const data = await axios.get(api + "/");
-  const text = data.data;
+export default function Home() {
+  const [text, setText] = useState("")
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await axios.get(api + "/");
+      setText(data.data)
+    }
+    fetchData()
+  }, [])
+
+  if (!text) {
+    return <Loading />
+  }
+
   return (
-    <Suspense fallback={<Loading />}>
+    <>
       <Auth />
       <Link href="/game" className="fixed top-0 left-0 btn btn-primary m-5">
         List of games
@@ -27,6 +39,6 @@ export default async function Home() {
           </div>
         </div>
       </div>
-    </Suspense>
+    </>
   );
 }

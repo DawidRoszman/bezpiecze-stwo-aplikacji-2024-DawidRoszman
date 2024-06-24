@@ -1,0 +1,54 @@
+services:
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: secretpassword
+    ports:
+      - 27017:27017
+    volumes:
+      - ./data:/data/db
+    networks:
+      - internal
+  backend:
+    build: ./api
+    restart: always
+    environment:
+      - MONGO_URI=mongodb://root:secretpassword@mongo:27017
+    ports:
+      - 5000:5000
+    depends_on:
+      - mongo
+    networks:
+      - internal
+      - external
+  frontend:
+    build: ./frontend
+    environment:
+      - API=http://backend:5000
+    restart: always
+    ports:
+      - 3000:3000
+    depends_on:
+      - backend
+    networks:
+      - external
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.1
+    restart: always
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command:
+      - start-dev
+      - --import-realm
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
+    ports:
+      - 8080:8080
+    networks:
+      - external
+networks:
+  internal:
+  external:

@@ -2,7 +2,6 @@ import express, { Express, Request, Response } from "express";
 import mqtt from "mqtt";
 import cors from "cors";
 import fs from "fs";
-import jwt from "jsonwebtoken";
 import {
   discardCardDispatch,
   dispatchAddToMeld,
@@ -16,7 +15,6 @@ import axios from "axios";
 const config = require(`./src/keycloak.json`)
 const Keycloak = require('keycloak-connect');
 const keycloak = new Keycloak({ store: false }, config);
-
 require("dotenv").config();
 
 const clientId = "mqttjs_server_" + Math.random().toString(16).slice(2, 8);
@@ -63,7 +61,7 @@ app.use(keycloak.middleware({logout: '/logout'}));
 client.subscribe("catnasta/chat");
 client.subscribe("catnasta/game");
 
-client.on("message", async (topic, message) => {
+client.on("message", async (topic:any, message:any) => {
   if (topic === "catnasta/chat") {
     const msg = JSON.parse(message.toString());
     if (!msg.username || !msg.message) {
@@ -283,7 +281,7 @@ app.get("/chat/search", async (req: Request, res: Response) => {
 });
 
 app.get("/login", (req, res) => {
-  const redirectUrl = `http://localhost:8080/realms/catnasta/protocol/openid-connect/auth?client_id=catnasta-api&redirect_uri=http://localhost:5000/callback&response_type=code&scope=openid`;
+  const redirectUrl = `http://192.168.32.82:8080/realms/catnasta/protocol/openid-connect/auth?client_id=catnasta-api&redirect_uri=http://localhost:5000/callback&response_type=code&scope=openid`;
   res.redirect(redirectUrl);
 })
 
@@ -299,7 +297,7 @@ app.get('/callback', async (req, res) => {
   }
 
   try {
-    const tokenUrl = 'http://localhost:8080/realms/catnasta/protocol/openid-connect/token';
+    const tokenUrl = 'http://192.168.32.82:8080/realms/catnasta/protocol/openid-connect/token';
     const data = {
       grant_type: 'authorization_code',
       client_id: config.resource,
@@ -614,8 +612,8 @@ app.put("/join_game", keycloak.protect() , async (req: any, res: Response) => {
   return res.send({ msg: "Game not found" });
 });
 
-app.listen(port, () => {
-    console.log(`[server]: Server is running at http://localhost:${port}`);
+app.listen(port,"0.0.0.0", () => {
+    console.log(`[server]: Server is running at http://0.0.0.0:${port}`);
   });
 // app.listen(port, () => {
 //   console.log(`[server]: Server is running at http://localhost:${port}`);
