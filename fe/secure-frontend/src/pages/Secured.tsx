@@ -1,5 +1,4 @@
 import { useKeycloak } from "@react-keycloak/web";
-import { useEffect, useState } from "react";
 
 const Secured = () => {
 

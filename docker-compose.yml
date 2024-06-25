@@ -12,7 +12,7 @@ services:
     networks:
       - internal
   backend:
-    build: ./api
+    build: ./catnasta/api
     restart: always
     environment:
       - MONGO_URI=mongodb://root:secretpassword@mongo:27017
@@ -25,7 +25,7 @@ services:
       - internal
       - external
   frontend:
-    build: ./frontend
+    build: ./catnasta/frontend
     environment:
       - API=http://backend:5000
     restart: always
@@ -50,6 +50,15 @@ services:
       - 8080:8080
     networks:
       - external
+  user-frontend:
+    build: ./fe/secure-frontend
+    depends_on:
+      - keycloak
+    ports:
+      - 80:4173
+    networks:
+      - external
+    restart: always
 networks:
   internal:
   external:

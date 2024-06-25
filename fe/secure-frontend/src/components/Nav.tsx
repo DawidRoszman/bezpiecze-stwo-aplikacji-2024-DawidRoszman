@@ -1,7 +1,7 @@
 import { useKeycloak } from "@react-keycloak/web";
 
 const Nav = () => {
-  const { keycloak, initialized } = useKeycloak();
+  const { keycloak } = useKeycloak();
 
 
   return (
