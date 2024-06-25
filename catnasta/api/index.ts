@@ -21,7 +21,7 @@ const clientId = "mqttjs_server_" + Math.random().toString(16).slice(2, 8);
 const client = mqtt.connect("wss://broker.emqx.io:8084/mqtt", {
   clientId: clientId,
 });
-
+const host_ip = process.env.HOST_IP || "localhost";
 const uri = process.env.MONGO_URI || "";
 
 const mongoClient = new MongoClient(uri, {
@@ -133,51 +133,6 @@ client.on("message", async (topic:any, message:any) => {
 app.get("/userinfo", keycloak.protect(), async (req:any, res) => {
   return res.send(req.kauth.grant.access_token.content);
 });
-// app.get("/userinfo", keycloak.protect(), async (req, res) => {
-//   if (!req.headers.authorization) {
-//     return res.status(401).send('No authorization header');
-//   }
-//   console.log(req.headers.authorization)
-//   const decoded = jwt.decode(req.headers.authorization?.toString().split(" ")[1]); 
-//   if (!decoded) {
-//     return res.status(401).send('Invalid token');
-//   }
-//   if (typeof decoded === 'object' && decoded !== null && 'preferred_username' in decoded) {
-//     const username = decoded.preferred_username;
-//     res.send({ username }); // Send username as an object for consistency
-//   } else {
-//     return res.status(401).send('Invalid token or username not found');
-//   }
-// })
-
-
-// app.post("/login", async (req: Request, res: Response) => {
-//   const username: string = req.body.username;
-//   const password: string = req.body.password;
-//   if (!username) {
-//     return res.send({ msg: "Please enter a username" });
-//   }
-//   if (!password) {
-//     return res.send({ msg: "Please enter a password" });
-//   }
-//   await mongoClient.connect();
-//   const query = mongoClient
-//     .db("catnasta")
-//     .collection("users")
-//     .findOne({ username: username });
-//   const user = await query;
-//   if (user === null) {
-//     return res.send({ msg: "Wrong username or password" });
-//   }
-//   bcrypt.compare(password, user.password, function (err, result) {
-//     if (result) {
-//       const token = generateAccessToken(username);
-//       return res.send({ token: token });
-//     } else {
-//       return res.send({ msg: "Wrong username or password" });
-//     }
-//   });
-// });
 
 app.delete(
   "/chat/delete/:id",
@@ -195,14 +150,14 @@ app.delete(
         return res.send({ msg: "Message not found" });
       }
       if (
-        message.username !== req.kauth.grant.access_token.preferred_username &&
-        !req.kauth.grant.access_token.realm_access.roles.includes("admin")) {
+        message.username !== req.kauth.grant.access_token.content.upn &&
+        !req.kauth.grant.access_token.content.realm_access.roles.includes("admin")) {
         return res.send({ msg: "You can only delete your own messages" });
       }
       await mongoClient.db("catnasta").collection("chat").deleteOne({ id: id });
       return res.send({ msg: "Message deleted" });
     } catch (err) {
-      return res.send({ msg: "Message not found" });
+      return res.send({ msg: "Something went wrong" });
     }
   },
 );
@@ -223,9 +178,8 @@ app.put(
         return res.send({ msg: "Message not found" });
       }
       if (
-        msg.username !== req.kauth.grant.access_token.preferred_username &&
-        !req.kauth.grant.access_token.realm_access.roles.includes("admin")
-      ) {
+        message.username !== req.kauth.grant.access_token.content.upn &&
+        !req.kauth.grant.access_token.content.realm_access.roles.includes("admin")) {
         return res.send({ msg: "You can only edit your own messages" });
       }
       await mongoClient
@@ -234,7 +188,7 @@ app.put(
         .updateOne({ id: id }, { $set: { message: message } });
       return res.send({ msg: "Message updated" });
     } catch (err) {
-      return res.send({ msg: "Message not found" });
+      return res.send({ msg: "Something went wrong" });
     }
   },
 );
@@ -281,7 +235,7 @@ app.get("/chat/search", async (req: Request, res: Response) => {
 });
 
 app.get("/login", (req, res) => {
-  const redirectUrl = `http://192.168.32.82:8080/realms/catnasta/protocol/openid-connect/auth?client_id=catnasta-api&redirect_uri=http://localhost:5000/callback&response_type=code&scope=openid`;
+  const redirectUrl = `http://${host_ip}:8080/realms/catnasta/protocol/openid-connect/auth?client_id=catnasta-api&redirect_uri=http://localhost:5000/callback&response_type=code&scope=openid`;
   res.redirect(redirectUrl);
 })
 
@@ -297,7 +251,7 @@ app.get('/callback', async (req, res) => {
   }
 
   try {
-    const tokenUrl = 'http://192.168.32.82:8080/realms/catnasta/protocol/openid-connect/token';
+    const tokenUrl = `http://${host_ip}:8080/realms/catnasta/protocol/openid-connect/token`;
     const data = {
       grant_type: 'authorization_code',
       client_id: config.resource,
@@ -359,16 +313,9 @@ app.get("/user", keycloak.protect(), async (req: any, res: Response) => {
 
 app.get(
   "/user/isAdmin",
-  keycloak.protect(),
+  keycloak.protect('realm:admin'),
   async (req: any, res: Response) => {
-    const admin = req.kauth.grant.access_token.realm_access.roles.includes("admin");
-    if (!admin) {
-      return res.send({ isAdmin: false });
-    }
-    return res.send({ isAdmin: true });
-  },
-);
-//dwa
+    return res.send({ isAdmin: true });})
 
 app.get(
   "/users/:id",
@@ -409,43 +356,6 @@ app.delete(
     return res.send({ msg: "User deleted" });
   },
 );
-
-// app.put(
-//   "/user/edit_password",
-//   keycloak.protect(),
-//   async (req: Request, res: Response) => {
-//     const user = req.body.user.data;
-//     const oldPassword = req.body.oldPassword;
-//     const newPassword = req.body.newPassword;
-//     if (!newPassword || !oldPassword) {
-//       return res.send({ msg: "Please enter an old password and new password" });
-//     }
-//     await mongoClient.connect();
-//     const query = mongoClient
-//       .db("catnasta")
-//       .collection("users")
-//       .findOne({ username: user });
-//     const result = await query;
-//     if (result === null) {
-//       return res.send({ msg: "User not found" });
-//     }
-//     bcrypt.compare(oldPassword, result.password, function (err, result) {
-//       if (result) {
-//         bcrypt.genSalt(10, function (err, salt) {
-//           bcrypt.hash(newPassword, salt, async function (err, hash) {
-//             await mongoClient
-//               .db("catnasta")
-//               .collection("users")
-//               .updateOne({ username: user }, { $set: { password: hash } });
-//             return res.send({ msg: "Password changed" });
-//           });
-//         });
-//       } else {
-//         return res.send({ msg: "Wrong password" });
-//       }
-//     });
-//   },
-// );
 
 app.put("/admin/user/edit/:id", keycloak.protect('realm:admin'), async (req, res) => {
   const id = req.params.id;
@@ -514,6 +424,12 @@ app.delete("/games/:id", keycloak.protect('realm:admin'), async (req, res) => {
   if (result === null) {
     return res.send({ msg: "Game not found" });
   }
+  games.map((game) => {
+    if (game.gameId === id) {
+      games.splice(games.indexOf(game), 1);
+    }
+  });
+  client.publish("catnasta/game_list", JSON.stringify(games));
   mongoClient
     .db("catnasta")
     .collection("games")
@@ -564,6 +480,8 @@ app.post("/create_game", keycloak.protect() , async (req: any, res: Response) =>
       }),
     ),
   );
+  mongoClient.connect();
+  await mongoClient.db("catnasta").collection("games").insertOne(game);
   return res.send({ id: game.gameId });
 });
 
@@ -607,6 +525,11 @@ app.put("/join_game", keycloak.protect() , async (req: any, res: Response) => {
         }),
       ),
     );
+    mongoClient.connect();
+    await mongoClient
+      .db("catnasta")
+      .collection("games")
+      .updateOne({ gameId: id }, { $set: { gameState: updatedGame.gameState } });
     return res.send({ id: id });
   }
   return res.send({ msg: "Game not found" });

@@ -132,8 +132,8 @@ const MqttChat = () => {
                   <div key={id}>
                     <div
                       className={`chat ${message.username === userContext.username
-                          ? "chat-end"
-                          : "chat-start"
+                        ? "chat-end"
+                        : "chat-start"
                         }`}
                     >
                       <div className="chat-header">{message.username}</div>

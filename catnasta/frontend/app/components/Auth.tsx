@@ -1,12 +1,28 @@
 "use client";
-import Link from "next/link";
-import React, { FormEvent } from "react";
+import React, { useEffect, useState } from "react";
 import { useUserContext, useUserDispatch } from "./UserContext";
 import { useCookies } from "next-client-cookies";
 import axios from "axios";
 import { api } from "../lib/api";
+import Link from "next/link";
 
 const Auth = () => {
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await axios.get(api + "/user/isAdmin",
+        {
+          headers: {
+            Authorization: "Bearer " + cookies.get("accessToken")
+          }
+        }
+      )
+      if (data.data.isAdmin) {
+        setIsAdmin(data.data.isAdmin)
+      }
+    }
+    fetchData()
+  })
   const userContext = useUserContext();
   const userDispatch = useUserDispatch();
   const cookies = useCookies();
@@ -23,11 +39,12 @@ const Auth = () => {
     <div className="fixed right-0 top-0 flex gap-3 m-4">
       {cookies.get("accessToken") !== undefined ? (
         <div className="flex align-middle text-center gap-3">
-          <button
-            className="btn btn-outline"
-          >
-            {userContext?.username}
-          </button>
+          {isAdmin ? <Link className="btn btn-outline" href={"/admin"}>{userContext?.username}</Link> :
+            <button
+              className="btn btn-outline btn-disabled disabled"
+            >
+              {userContext?.username}
+            </button>}
           <button onClick={() => handleSignOut()} className="btn btn-warning">
             Sign out
           </button>
