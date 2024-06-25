@@ -178,7 +178,7 @@ app.put(
         return res.send({ msg: "Message not found" });
       }
       if (
-        message.username !== req.kauth.grant.access_token.content.upn &&
+        msg.username !== req.kauth.grant.access_token.content.upn &&
         !req.kauth.grant.access_token.content.realm_access.roles.includes("admin")) {
         return res.send({ msg: "You can only edit your own messages" });
       }

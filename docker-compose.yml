@@ -59,6 +59,18 @@ services:
     networks:
       - external
     restart: always
+  go-api:
+    build: ./go-api
+    ports:
+      - 8081:8081
+    networks:
+      - external
+    restart: always
+    environment:
+      - GIN_MOD=release
+      - KEYCLOAK_SERICE=catnasta-api
+      - KEYCLOAK_REALM=catnasta
+      - KEYCLOAK_URL=http://keycloak:8080
 networks:
   internal:
   external:
