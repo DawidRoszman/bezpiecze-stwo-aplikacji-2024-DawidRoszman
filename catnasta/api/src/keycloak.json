@@ -1,6 +1,6 @@
 {
   "realm": "catnasta",
-  "auth-server-url": "http://192.168.32.82:8080",
+  "auth-server-url": "http://192.168.0.101:8080",
   "ssl-required": "external",
   "resource": "catnasta-api",
   "credentials": {
@@ -11,3 +11,4 @@
   "policy-enforcer": {},
   "bearer-only": true
 }
+

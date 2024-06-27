@@ -3,6 +3,8 @@
 
 # Starting the application
 
+Change `HOST_IP` in `docker-compose.yml` in `backend` service and in `keycloak.json` in `catnasta/api/src` to your local machine ip address.
+
 ```sh
 docker compose up --build
 ```
@@ -11,4 +13,6 @@ To use application create user in keycloak administrator panel.
 
 Credentials to keycloak admin panel `admin:admin`
 
-To make user admin assign the realm role `admin`
+To make user a realm admin assign group `admin`
+To make use a realm moderator assign group `moderator`
+

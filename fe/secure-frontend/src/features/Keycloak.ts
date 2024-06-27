@@ -1,8 +1,10 @@
 import Keycloak from "keycloak-js";
+import { api } from "../helpers/server-route";
 const keycloak = new Keycloak({
- url: "http://localhost:8080",
- realm: "catnasta",
- clientId: "catnasta-api",
+  url: api + ":8080",
+  realm: "catnasta",
+  clientId: "catnasta-spa",
 });
 
 export default keycloak;
+

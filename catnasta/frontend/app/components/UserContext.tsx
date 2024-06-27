@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useReducer } from "react";
 import { api } from "../lib/api";
 import axios from "axios";
 import { UserActionType, userReducer } from "./userReduces";
+import { useRouter } from "next/navigation";
 
 interface User {
   username: string;
@@ -33,6 +34,7 @@ export const UserContextProvider = ({
   children: React.ReactNode;
 }) => {
   const [state, dispatch] = useReducer(userReducer, initialUser);
+  const redirect = useRouter();
 
   const cookies = useCookies();
   useEffect(() => {
@@ -48,14 +50,13 @@ export const UserContextProvider = ({
           console.log(username)
           if (username.msg !== undefined) {
             alert(username.msg);
-            cookies.remove("accessToken");
             dispatch({ type: UserActionType.SET_USERNAME, payload: "" });
+            redirect.replace("/login")
             return;
           }
           dispatch({ type: UserActionType.SET_USERNAME, payload: username });
         } catch (error) {
           console.log(error);
-          cookies.remove("accessToken");
           dispatch({ type: UserActionType.SET_USERNAME, payload: "" });
         }
       }
